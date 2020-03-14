@@ -2,4 +2,4 @@
 
 clear
 gcc -o mec mec.c -lm
-./mec
+./mec $1
