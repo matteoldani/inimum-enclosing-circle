@@ -168,7 +168,10 @@ circle randomizedIncrementalMethodGivenTwoPoints(double points[][2], int n, int 
   for(int i = 0; i<n; i++){
     l = lineFromPoints(points, firstPointPosition, secondPointPosition);
     if(i!=firstPointPosition && i!=secondPointPosition){
-      if(((points[i][0]-points[firstPointPosition][0])/(points[secondPointPosition][0]-points[firstPointPosition][0])) > (points[i][1]-points[firstPointPosition][1])/(points[secondPointPosition][1]-points[firstPointPosition][1])){
+      //
+      double y = ((-1*(l.a/l.b)*points[i][0]) - (l.c/l.b);
+      if(points[i][1]<y){
+      //if(((points[i][0]-points[firstPointPosition][0])/(points[secondPointPosition][0]-points[firstPointPosition][0])) > (points[i][1]-points[firstPointPosition][1])/(points[secondPointPosition][1]-points[firstPointPosition][1])){
         if(bestPositionRight != -1){
           if(distancePointLine(points, i, l) > distancePointLine(points, bestPositionRight, l)){
             bestPositionRight = i;
@@ -182,9 +185,9 @@ circle randomizedIncrementalMethodGivenTwoPoints(double points[][2], int n, int 
           if(distancePointLine(points, i, l) < distancePointLine(points, bestPostionLeft, l)){
             bestPostionLeft = i;
           }
-      }else{
-        bestPostionLeft = i;
-      }
+        }else{
+          bestPostionLeft = i;
+        }
     }
   }
 }
