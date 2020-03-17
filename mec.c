@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string.h>
 
-#define MAX_CASE 10000
+#define MAX_CASE 10000 // limit for the points
 
 typedef struct{
   double x, y;
@@ -99,6 +99,7 @@ circle findCircle(double x1, double y1, double x2, double y2, double x3, double 
     return aFuckingCircle;
 }
 
+//algorithm complexity around O(n^4)
 circle bruteForceMethod(double points[][2], int n){
   int i=0, j=0, k;
   double xc, yx, distance;
@@ -107,8 +108,11 @@ circle bruteForceMethod(double points[][2], int n){
   int findAPointOut = 0;
   best.r = INFINITY;
 
+  printf("In the Brute force method\n");
+  printf("Checking two-points circles\n");
   for(i = 0; i<n; i++){
     for(j=i+1; j<n; j++){
+
       /*Finding the distance from two point, calculate the radius and the center
       of the hypotetical circle then checking if contains all the points. If that
       happends i will chek if is radius is better than the best one by far
@@ -120,7 +124,7 @@ circle bruteForceMethod(double points[][2], int n){
       //checking if all points are in the new circle
       findAPointOut = 0;
       for(k=0; k<n; k++){
-        if(pow(points[k][0] - temp.x, 2) + pow(points[k][1] - temp.y, 2) > pow(temp.r, 2)){
+        if((pow(points[k][0] - temp.x, 2) + pow(points[k][1] - temp.y, 2) > pow(temp.r, 2)) && k!= i && k!=j){
           findAPointOut = 1;
         }
       }
@@ -133,47 +137,76 @@ circle bruteForceMethod(double points[][2], int n){
     }
   }
 
+  printf("Checking three points circles\n");
+
   for(i=0; i<n; i++){
-    for(j = i+1; j<n; j++){
+    for(j =i+1; j<n; j++){
       for(k=j+1; k<n; k++){
         temp = findCircle(points[i][0], points[i][1], points[j][0], points[j][1], points[k][0], points[k][1]);
 
         findAPointOut = 0;
         for(int z=0; z<n; z++){
-          if(pow(points[z][0] - temp.x, 2) + pow(points[z][1] - temp.y, 2) > pow(temp.r, 2)){
+          if((pow(points[z][0] - temp.x, 2) + pow(points[z][1] - temp.y, 2) > pow(temp.r, 2)) && z!= i && z!=j && z!=k){
             findAPointOut = 1;
           }
         }
 
         if(!findAPointOut){
           if(temp.r < best.r){
-            best = temp;
+          best = temp;
           }
         }
       }
     }
   }
 
-
-
   return best;
 }
 
 circle randomizedIncrementalMethodGivenTwoPoints(double points[][2], int n, int firstPointPosition, int secondPointPosition){
+  circle c;
+  float isInTheCircle;
+
+  c.x = (points[firstPointPosition][0] + points[secondPointPosition][0]/2);
+  c.y = (points[firstPointPosition][1] + points[secondPointPosition][1]/2);
+  c.r = (calculateDistance(points[firstPointPosition][0], points[firstPointPosition][1], points[secondPointPosition][0], points[secondPointPosition][1])/2);
+
+  for(int i=0; i<n; i++){
+    isInTheCircle = pow(points[i][0] - c.x, 2) + pow(points[i][1] - c.y, 2) - pow(c.r, 2);
+
+    if(isInTheCircle > 0) {
+      c = findCircle(points[firstPointPosition][0], points[firstPointPosition][1], points[secondPointPosition][0], points[secondPointPosition][1], points[i][0], points[i][1]);
+    }
+  }
+
+  return c;
+}
+
+//other implementation not working
+/*circle randomizedIncrementalMethodGivenTwoPoints(double points[][2], int n, int firstPointPosition, int secondPointPosition){
   double mx, q;
   int bestPostionLeft = -1, bestPositionRight = -1;
   circle left, right;
   line l;
+  double xAxis, yAxis;
+  double y ;
+
+  xAxis = points[firstPointPosition][0] + points[secondPointPosition][0];
+  xAxis = xAxis /2;
+
+  yAxis = points[firstPointPosition][1] + points[secondPointPosition][1];
+  yAxis = yAxis /2;
 
   for(int i = 0; i<n; i++){
     l = lineFromPoints(points, firstPointPosition, secondPointPosition);
     if(i!=firstPointPosition && i!=secondPointPosition){
       //
-      double y = ((-1*(l.a/l.b)*points[i][0]) - (l.c/l.b);
+      y = ((-1*(l.a/l.b))*points[i][0]) - (l.c/l.b);
       if(points[i][1]<y){
       //if(((points[i][0]-points[firstPointPosition][0])/(points[secondPointPosition][0]-points[firstPointPosition][0])) > (points[i][1]-points[firstPointPosition][1])/(points[secondPointPosition][1]-points[firstPointPosition][1])){
         if(bestPositionRight != -1){
-          if(distancePointLine(points, i, l) > distancePointLine(points, bestPositionRight, l)){
+          if(calculateDistance(xAxis, yAxis, points[i][0], points[i][1]) > calculateDistance(xAxis, yAxis, points[bestPositionRight][0], points[bestPositionRight][1])){
+          //if(distancePointLine(points, i, l) > distancePointLine(points, bestPositionRight, l)){
             bestPositionRight = i;
           }
         }else{
@@ -182,7 +215,8 @@ circle randomizedIncrementalMethodGivenTwoPoints(double points[][2], int n, int 
 
       }else {
         if(bestPostionLeft != -1){
-          if(distancePointLine(points, i, l) < distancePointLine(points, bestPostionLeft, l)){
+          //if(distancePointLine(points, i, l) < distancePointLine(points, bestPostionLeft, l)){
+          if(calculateDistance(xAxis, yAxis, points[i][0], points[i][1]) > calculateDistance(xAxis, yAxis, points[bestPostionLeft][0], points[bestPostionLeft][1])){
             bestPostionLeft = i;
           }
         }else{
@@ -207,19 +241,24 @@ circle randomizedIncrementalMethodGivenTwoPoints(double points[][2], int n, int 
     }
   }
   if(findAPointOutOnLeft){
+    printCircle(right);
     return right;
   }else if(findAPointOutOnright){
+    printCircle(right);
     return left;
   }else{
     if(left.r > right.r){
+      printCircle(right);
       return right;
     }else{
+      printCircle(left);
       return left;
     }
   }
 }
+*/
 
-circle rightrandomizedIncrementalMethodGivenOnePoint(double points[][2], int pointPosition){
+circle RandomizedIncrementalMethodGivenOnePoint(double points[][2], int pointPosition, int n){
   circle c;
   int i, j;
   double isInTheCircle;
@@ -229,11 +268,11 @@ circle rightrandomizedIncrementalMethodGivenOnePoint(double points[][2], int poi
   c.y = (points[pointPosition][1]+points[0][1])/2;
   c.r = (calculateDistance(points[pointPosition][0], points[pointPosition][1], points[0][0], points[0][1])/2);
 
-//pow(points[k][0] - temp.x, 2) + pow(points[k][1] - temp.y, 2) > pow(temp.r, 2)
+
   for(j=1; j<pointPosition; j++){
     isInTheCircle = pow(points[j][0] - c.x, 2) + pow(points[j][1] - c.y, 2) - pow(c.r, 2);
     if(isInTheCircle > 0){
-      //printf("sono entrato nel calcolo con due punti\n");
+
       c = randomizedIncrementalMethodGivenTwoPoints(points, j, j, pointPosition);
     }
   }
@@ -242,11 +281,12 @@ circle rightrandomizedIncrementalMethodGivenOnePoint(double points[][2], int poi
 
 }
 
+//algorithm complexity aroud O(n)
 circle randomizedIncrementalMethod(double points[][2], int n){
   circle c;
-
+  float x;
   double isInTheCircle;
-
+  printf("In the Incremental method\n");
   c.x = (points[1][0]+points[0][0])/2;
   c.y = (points[1][1]+points[0][1])/2;
   c.r = (calculateDistance(points[0][0], points[0][1], points[1][0], points[1][1])/2);
@@ -254,12 +294,16 @@ circle randomizedIncrementalMethod(double points[][2], int n){
   for(int i=2; i<n; i++){
     isInTheCircle = pow(points[i][0] - c.x, 2) + pow(points[i][1] - c.y, 2) - pow(c.r, 2);
     if(isInTheCircle > 0){
-      //printf("sono entrato nel calcolo con un punto\n");
-      c = randomizedIncrementalMethodGivenOnePoint(points, i);
+      c = RandomizedIncrementalMethodGivenOnePoint(points, i, n);
     }
   }
 
   return c;
+}
+
+
+void printCircle(circle c){
+  printf("choosen circle: Center -> (%.2lf, %.2lf), radius -> %.2lf\n", c.x, c.y, c.r);
 }
 
 int main(int argc, char const *argv[]) {
@@ -269,31 +313,29 @@ int main(int argc, char const *argv[]) {
   double points[MAX_CASE][2]; //x, y
   int i, j;
   circle c;
+  int check = 0;
 
 
   if((f = fopen(argv[1], "r")) == NULL){
-    printf("Errore apertura file");
+    printf("Error opening the file");
     exit(1);
   }
 
-  //leggo numero di test case
+  //reads the number of test points
   fscanf(f, "%d", &n);
 
   for(i=0;i<n;i++){
     fscanf(f, "%lf %lf", &points[i][0], &points[i][1]);
   }
 
-  /*debug mostra matrice
-  printf("I punti considerati sono: \n");
-  for ( i = 0; i < n; i++) {
-      printf("%.2lf %.2lf\n", points[i][0], points[i][1] );
-  }
-  */
+
   c = bruteForceMethod(points, n);
-  printf("Il cerchio trovato con il bruteForce ha centro in (%.2lf, %.2lf) e raggio %.2lf\n", c.x, c.y, c.r);
+  printf("choosen circle by Brute Froce Method: Center -> (%.2lf, %.2lf), radius -> %.2lf\n", c.x, c.y, c.r);
+
 
   c = randomizedIncrementalMethod(points, n);
-  printf("Il cerchio trovato con il rightrandomizedIncrementalMethod ha centro in (%.2lf, %.2lf) e raggio %.2lf\n", c.x, c.y, c.r);
+
+  printf("choosen circle by Incremental Method: Center -> (%.2lf, %.2lf), radius -> %.2lf\n", c.x, c.y, c.r);
 
 
   return 0;
